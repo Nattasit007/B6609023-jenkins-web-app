@@ -1,29 +1,30 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-deployment
-  labels:
-    app: my-nginx
+  name: jenkins
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
-      app: my-nginx
+      app: jenkins
   template:
     metadata:
       labels:
-        app: my-nginx
+        app: jenkins
     spec:
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
       containers:
-      - name: nginx-container
-        image: my-nginx-web:latest
-        imagePullPolicy: Never
-        ports:
-        - containerPort: 80
-        resources:
-          limits:
-            cpu: "500m"
-            memory: "128Mi"
-          requests:
-            cpu: "256m"
-            memory: "64Mi"
+        - name: jenkins
+          image: jenkins/jenkins:lts-jdk17
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - mountPath: /var/jenkins_home
+              name: jenkinsdata
+      volumes:                          # ← เพิ่ม : ตรงนี้
+        - name: jenkinsdata
+          persistentVolumeClaim:
+            claimName: jenkins-volume-claim
